@@ -13,13 +13,14 @@ def get_catalog():
 
     with db.engine.begin() as connection:
         green_potions = connection.execute(sqlalchemy.text("SELECT num_green_potions FROM global_inventory")).one()[0]
-
-        return [
-                {
-                    "sku": "GREEN_POTION_0",
-                    "name": "green potion",
-                    "quantity": green_potions,
-                    "price": 50,
-                    "potion_type": [0, 100, 0, 0],
-                }
-            ]
+        if green_potions > 0:
+            return [
+                    {
+                        "sku": "GREEN_POTION_0",
+                        "name": "green potion",
+                        "quantity": green_potions,
+                        "price": 50,
+                        "potion_type": [0, 100, 0, 0],
+                    }
+                ]
+        return []

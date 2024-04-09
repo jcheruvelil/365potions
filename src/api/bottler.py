@@ -51,6 +51,7 @@ def get_bottle_plan():
                         "quantity": current_green_ml // 100,
                     }
                 ]
+        return []
 
 if __name__ == "__main__":
     print(get_bottle_plan())
