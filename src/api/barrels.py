@@ -49,7 +49,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             for barrel in wholesale_catalog:
                 if(barrel.sku == "SMALL_GREEN_BARREL"):
                     if(barrel.price <= gold):
-                        print("buy green potion")
+                        print("buy green barrel")
                         return [
                         {
                             "sku": "SMALL_GREEN_BARREL",
