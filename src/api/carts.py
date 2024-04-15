@@ -100,7 +100,7 @@ class CartItem(BaseModel):
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
     if cart_id in cart_dict:
-        cart_dict[cart_id][item_sku] = cart_item.quantity
+        cart_dict[cart_id][item_sku] += cart_item.quantity
     else:
         cart_dict[cart_id] = {item_sku:cart_item.quantity}
 
