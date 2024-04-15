@@ -132,6 +132,4 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
 
             total_potions += quant
 
-    del cart_dict[cart_id]
-
     return {"total_potions_bought": total_potions, "total_gold_paid": cart_checkout.payment}
