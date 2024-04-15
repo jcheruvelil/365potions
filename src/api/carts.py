@@ -119,17 +119,19 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     with db.engine.begin() as connection:
         for sku, quant in cart_dict[cart_id].items():
             if sku == "GREEN_POTION_0":
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 40"))
-                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - {quant}"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 40"))
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_potions = num_green_potions - {quant}"))
 
             elif(sku == "RED_POTION_0"):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 60"))
-                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions - {quant}"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 60"))
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {quant}"))
 
             elif(sku == "BLUE_POTION_0"):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 60"))
-                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = num_blue_potions - {quant}"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 60"))
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_potions = num_blue_potions - {quant}"))
 
             total_potions += quant
+
+    del cart_dict[cart_id]
 
     return {"total_potions_bought": total_potions, "total_gold_paid": cart_checkout.payment}
