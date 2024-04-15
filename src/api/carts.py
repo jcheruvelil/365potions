@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
 
+cart_dict = {}
+
 router = APIRouter(
     prefix="/carts",
     tags=["cart"],
@@ -97,7 +99,12 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
+    if cart_id in cart_dict:
+        cart_dict[cart_id][item_sku] = cart_item.quantity
+    else:
+        cart_dict[cart_id] = {item_sku:cart_item.quantity}
 
+    
     return "OK"
 
 
@@ -107,10 +114,22 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
-
+    print(cart_dict)
+    total_potions = 0
     with db.engine.begin() as connection:
-        gold_to_add = 45
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + {gold_to_add}"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - 1"))
+        for sku, quant in cart_dict[cart_id].items():
+            if sku == "GREEN_POTION_0":
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 40"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - {quant}"))
 
-    return {"total_potions_bought": 1, "total_gold_paid": 45}
+            elif(sku == "RED_POTION_0"):
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 60"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions - {quant}"))
+
+            elif(sku == "BLUE_POTION_0"):
+                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + 60"))
+                connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = num_blue_potions - {quant}"))
+
+            total_potions += quant
+
+    return {"total_potions_bought": total_potions, "total_gold_paid": cart_checkout.payment}
