@@ -19,21 +19,35 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int):
     """ """
 
+    total_ml_used = [0, 0, 0, 0]
+
+
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            potions_to_add = potion.quantity
+            
+            # result = connection.execute(
+            #     sqlalchemy.text("SELECT EXISTS (SELECT 1 FROM potions WHERE potion_type = :potion_type)"), [{"potion_type": potion.potion_type}]
+            # )
 
-            if(potion.potion_type == [0, 100, 0, 0]):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_potions = num_green_potions + {potions_to_add}"))
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = num_green_ml - ({potions_to_add}*100)"))
+            # if not result:
+            #     #add new potion row to table
+            #     pot_type = potion.potion_type
+            #     new_sku = "R" + str(pot_type[0]) + "G" + str(pot_type[1]) + "B" + str(pot_type[2]) + "D" + str(pot_type[3])
 
-            elif(potion.potion_type == [100, 0, 0, 0]):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions + {potions_to_add}"))
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_ml = num_red_ml - ({potions_to_add}*100)"))
-
-            elif(potion.potion_type == [0, 0, 100, 0]):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_potions = num_blue_potions + {potions_to_add}"))
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_ml = num_blue_ml - ({potions_to_add}*100)"))
+            ml_used = [x*potion.quantity for x in potion.potion_type]
+            print(ml_used)
+            total_ml_used = [x + y for x, y in zip(total_ml_used, ml_used)]
+            connection.execute(sqlalchemy.text("UPDATE potions SET quantity = quantity +:num_to_add WHERE potion_type = :potion_type"),
+                               [{"num_to_add": potion.quantity, "potion_type": str(potion.potion_type)}])
+        print(total_ml_used) 
+        connection.execute(sqlalchemy.text("""
+                                           UPDATE global_inventory SET
+                                           num_red_ml = num_red_ml - :red_ml_used, 
+                                           num_green_ml = num_green_ml - :green_ml_used, 
+                                           num_blue_ml = num_blue_ml - :blue_ml_used, 
+                                           num_dark_ml = num_dark_ml - :dark_ml_used
+                                           """),
+                                           [{"red_ml_used": total_ml_used[0], "green_ml_used": total_ml_used[1], "blue_ml_used": total_ml_used[2], "dark_ml_used": total_ml_used[3]}])
             
 
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
@@ -52,11 +66,18 @@ def get_bottle_plan():
 
     # Initial logic: bottle all barrels into green potions.
 
+    red_ml = 0
+    green_ml = 0
+    blue_ml = 0
+    # dark_ml = 0
     plan = []
 
-    green_ml = db.get_green_ml()
-    red_ml = db.get_red_ml()
-    blue_ml = db.get_blue_ml()
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(("SELECT * FROM global_inventory"))).one()
+        red_ml = results.num_red_ml
+        green_ml = results.num_green_ml
+        blue_ml = results.num_blue_ml
+        # dark_ml = results.num_dark_ml
 
     if green_ml >= 100:
         plan.append(

@@ -24,20 +24,54 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
     """ """
 
     with db.engine.begin() as connection:
+
+        # try:
+        #     connection.execute(
+        #         sqlalchemy.text(
+        #             "INSERT INTO processed (job_id, type) VALUES (:order_id, 'barrels')"),
+        #             [{"order_id": order_id}]
+        #         )
+        # except IntegrityError as e:
+        #     return "OK"
+
+        gold_paid = 0
+        red_ml = 0
+        green_ml = 0
+        blue_ml = 0
+        dark_ml = 0
+
         for barrel in barrels_delivered:
-            barrel_color = barrel.sku
-            ml_to_add = barrel.ml_per_barrel
-            gold_to_subtract = barrel.price
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_to_subtract}"))
+            potion_type = barrel.potion_type
+            gold_paid += barrel.price*barrel.quantity
 
-            if(barrel_color == "SMALL_RED_BARREL"):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_ml = num_red_ml + {ml_to_add}"))
+            if(potion_type == [1, 0, 0, 0]):
+                red_ml += barrel.ml_per_barrel*barrel.quantity
 
-            elif(barrel_color == "SMALL_GREEN_BARREL"):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_ml = num_green_ml + {ml_to_add}"))
+            elif(potion_type == [0, 1, 0, 0]):
+                green_ml += barrel.ml_per_barrel*barrel.quantity
 
-            elif(barrel_color == "SMALL_BLUE_BARREL"):
-                connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_ml = num_blue_ml + {ml_to_add}"))
+            elif(potion_type == [0, 0, 1, 0]):
+                blue_ml += barrel.ml_per_barrel*barrel.quantity
+
+            elif(potion_type == [0, 0, 0, 1]):
+                dark_ml += barrel.ml_per_barrel*barrel.quantity
+
+            else:
+                print("Invalid Potion Type")
+
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE global_inventory SET
+                gold = gold - :gold_paid,
+                num_red_ml = num_red_ml + :red_ml,
+                num_green_ml = num_green_ml + :green_ml,
+                num_blue_ml = num_blue_ml + :blue_ml,
+                num_dark_ml = num_dark_ml + :dark_ml
+                """
+            ),
+            [{"gold_paid": gold_paid, "red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml}]
+        )
 
     print(f"barrels delievered: {barrels_delivered} order_id: {order_id}")
 
@@ -48,12 +82,29 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
+
+    gold = 0
+    red_ml = 0
+    green_ml = 0
+    blue_ml = 0
+    # dark_ml = 0
     plan = []
 
-    gold = db.get_gold()
-    potions = [db.get_red_potions(), db.get_green_potions(), db.get_blue_potions()]
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(("SELECT * FROM global_inventory"))).one()
+        gold = results.gold
+        red_ml = results.num_red_ml
+        green_ml = results.num_green_ml
+        blue_ml = results.num_blue_ml
+        # dark_ml = results.num_dark_ml
+        print("current gold: ", gold)
 
-    sorted_potions_idx = sorted(range(len(potions)), key=lambda i: potions[i])
+    ml_levels = [red_ml, green_ml, blue_ml]
+    
+
+    # TODO: add thresholds for medium/large barrels
+
+    sorted_potions_idx = sorted(range(len(ml_levels)), key=lambda i: ml_levels[i])
     for idx in sorted_potions_idx:
         #buying red barrel
         if idx == 0:
