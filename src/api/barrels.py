@@ -87,7 +87,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     red_ml = 0
     green_ml = 0
     blue_ml = 0
-    # dark_ml = 0
+    dark_ml = 0
     plan = []
 
     with db.engine.begin() as connection:
@@ -96,7 +96,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         red_ml = results.num_red_ml
         green_ml = results.num_green_ml
         blue_ml = results.num_blue_ml
-        # dark_ml = results.num_dark_ml
+        #dark_ml = results.num_dark_ml
         print("current gold: ", gold)
 
     ml_levels = [red_ml, green_ml, blue_ml]
