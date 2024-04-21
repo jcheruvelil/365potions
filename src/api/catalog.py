@@ -17,13 +17,14 @@ def get_catalog():
 
         for item in result:
             if item.quantity > 0:
+                potion_type = [item.red_ml, item.green_ml, item.blue_ml, item.dark_ml]
                 catalog.append(
                 {
                     "sku": item.sku,
                     "name": item.name,
                     "quantity": item.quantity,
                     "price": item.price,
-                    "potion_type": item.potion_type,
+                    "potion_type": potion_type,
                 }
             )
                 
