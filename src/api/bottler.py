@@ -24,15 +24,6 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
 
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            
-            # result = connection.execute(
-            #     sqlalchemy.text("SELECT EXISTS (SELECT 1 FROM potions WHERE potion_type = :potion_type)"), [{"potion_type": potion.potion_type}]
-            # )
-
-            # if not result:
-            #     #add new potion row to table
-            #     pot_type = potion.potion_type
-            #     new_sku = "R" + str(pot_type[0]) + "G" + str(pot_type[1]) + "B" + str(pot_type[2]) + "D" + str(pot_type[3])
 
             ml_used = [x*potion.quantity for x in potion.potion_type]
             total_ml_used = [x + y for x, y in zip(total_ml_used, ml_used)]
@@ -69,6 +60,8 @@ def get_bottle_plan():
     with db.engine.begin() as connection:
         results = connection.execute(sqlalchemy.text(("SELECT * FROM global_inventory"))).one()
         curr_ml = [results.num_red_ml, results.num_green_ml, results.num_blue_ml, results.num_dark_ml]
+        potion_cap = results.potion_cap*50
+        ind_potion_cap = potion_cap // 6
         
 
         catalog = connection.execute(sqlalchemy.text("SELECT * FROM potions ORDER BY quantity ASC"))
@@ -80,10 +73,11 @@ def get_bottle_plan():
                 max_quants = [x // y if y!= 0 else -1 for x, y in zip(curr_ml, ml_needed)]
                 max_quants = [x for x in max_quants if x>=0]
                 max_num = min(max_quants)
+                to_bottle = min(max_num, (ind_potion_cap-potion.quantity))
                 plan.append(
                     {
                         "potion_type": [ml_needed[0], ml_needed[1], ml_needed[2], ml_needed[3]],
-                        "quantity": max_num
+                        "quantity": to_bottle
                     }
                 )
                 ml_used = [x*max_num for x in ml_needed]
