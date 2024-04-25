@@ -88,59 +88,46 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     green_ml = 0
     blue_ml = 0
     dark_ml = 0
+    ml_cap = 0
     plan = []
 
     with db.engine.begin() as connection:
-        results = connection.execute(sqlalchemy.text(("SELECT * FROM global_inventory"))).one()
-        gold = results.gold
-        red_ml = results.num_red_ml
-        green_ml = results.num_green_ml
-        blue_ml = results.num_blue_ml
-        #dark_ml = results.num_dark_ml
+        gold, red_ml, green_ml, blue_ml, dark_ml, ml_cap = connection.execute(sqlalchemy.text(("SELECT gold, num_red_ml, num_green_ml, num_blue_ml, num_dark_ml, ml_cap FROM global_inventory"))).first()
         print("current gold: ", gold)
 
-    ml_levels = [red_ml, green_ml, blue_ml]
+    ml_cap = ml_cap*10000
+    ind_ml_cap = ml_cap / 4
     
 
-    # TODO: add thresholds for medium/large barrels
+    sorted_wholesale_catalog = sorted(wholesale_catalog, key=lambda x: x.ml_per_barrel / x.price)
+    for barrel in sorted_wholesale_catalog:
+        if barrel.potion_type == [1, 0, 0, 0]:
+            to_fill = (ind_ml_cap-red_ml)//barrel.ml_per_barrel
+            to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
+            if to_buy > 0:
+                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                gold -= barrel.price*to_buy
 
-    sorted_potions_idx = sorted(range(len(ml_levels)), key=lambda i: ml_levels[i])
-    for idx in sorted_potions_idx:
-        #buying red barrel
-        if idx == 0:
-            for barrel in wholesale_catalog:
-                if(barrel.sku == "SMALL_RED_BARREL"):
-                    if(barrel.price <= gold):
-                        print("buy red barrel")
-                        plan.append({
-                            "sku": "SMALL_RED_BARREL",
-                            "quantity": 1,
-                        })
-                        gold -= barrel.price
-        
-        #buying green barrel
-        elif idx == 1:
-            for barrel in wholesale_catalog:
-                if(barrel.sku == "SMALL_GREEN_BARREL"):
-                    if(barrel.price <= gold):
-                        print("buy green barrel")
-                        plan.append({
-                            "sku": "SMALL_GREEN_BARREL",
-                            "quantity": 1,
-                        })
-                        gold -= barrel.price
+        elif barrel.potion_type == [0, 1, 0, 0]:
+            to_fill = (ind_ml_cap-green_ml)//barrel.ml_per_barrel
+            to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
+            if to_buy > 0:
+                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                gold -= barrel.price*to_buy
 
-        #buying blue barrel
-        elif idx == 2:
-            for barrel in wholesale_catalog:
-                if(barrel.sku == "SMALL_BLUE_BARREL"):
-                    if(barrel.price <= gold):
-                        print("buy blue barrel")
-                        plan.append({
-                            "sku": "SMALL_BLUE_BARREL",
-                            "quantity": 1,
-                        })
-                        gold -= barrel.price
+        elif barrel.potion_type == [0, 0, 1, 0]:
+            to_fill = (ind_ml_cap-blue_ml)//barrel.ml_per_barrel
+            to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
+            if to_buy > 0:
+                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                gold -= barrel.price*to_buy
+
+        elif barrel.potion_type == [0, 0, 0, 1]:
+            to_fill = (ind_ml_cap-dark_ml)//barrel.ml_per_barrel
+            to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
+            if to_buy > 0:
+                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                gold -= barrel.price*to_buy
 
     return plan              
 
