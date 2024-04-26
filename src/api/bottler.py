@@ -74,14 +74,15 @@ def get_bottle_plan():
                 max_quants = [x for x in max_quants if x>=0]
                 max_num = min(max_quants)
                 to_bottle = min(max_num, (ind_potion_cap-potion.quantity))
-                plan.append(
-                    {
-                        "potion_type": [ml_needed[0], ml_needed[1], ml_needed[2], ml_needed[3]],
-                        "quantity": to_bottle
-                    }
-                )
-                ml_used = [x*max_num for x in ml_needed]
-                curr_ml = [x-y for x, y in zip(curr_ml, ml_used)]
+                if to_bottle > 0:
+                    plan.append(
+                        {
+                            "potion_type": [ml_needed[0], ml_needed[1], ml_needed[2], ml_needed[3]],
+                            "quantity": to_bottle
+                        }
+                    )
+                    ml_used = [x*max_num for x in ml_needed]
+                    curr_ml = [x-y for x, y in zip(curr_ml, ml_used)]
 
     return plan
 
