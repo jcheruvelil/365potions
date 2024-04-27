@@ -105,28 +105,28 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             to_fill = (ind_ml_cap-red_ml)//barrel.ml_per_barrel
             to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
             if to_buy > 0:
-                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
                 gold -= barrel.price*to_buy
 
         elif barrel.potion_type == [0, 1, 0, 0]:
             to_fill = (ind_ml_cap-green_ml)//barrel.ml_per_barrel
             to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
             if to_buy > 0:
-                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
                 gold -= barrel.price*to_buy
 
         elif barrel.potion_type == [0, 0, 1, 0]:
             to_fill = (ind_ml_cap-blue_ml)//barrel.ml_per_barrel
             to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
             if to_buy > 0:
-                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
                 gold -= barrel.price*to_buy
 
         elif barrel.potion_type == [0, 0, 0, 1]:
             to_fill = (ind_ml_cap-dark_ml)//barrel.ml_per_barrel
             to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
             if to_buy > 0:
-                plan.append({"sku": barrel.sku, "quantity": to_buy})
+                plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
                 gold -= barrel.price*to_buy
 
     return plan              
