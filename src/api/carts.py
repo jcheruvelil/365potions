@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
+from sqlalchemy import exc
+
 
 cart_dict = {}
 
@@ -130,13 +132,21 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     total_potions = 0
     amount_paid = 0
     with db.engine.begin() as connection:
+        try:
+            connection.execute(
+                sqlalchemy.text(
+                    "INSERT INTO processed (job_id, type) VALUES (:order_id, 'checkout')"),
+                    [{"order_id": cart_id}]
+                )
+        except exc.IntegrityError as e:
+            return "OK"
+        
         connection.execute(sqlalchemy.text("""
-                                           UPDATE potions
-                                           SET quantity = potions.quantity - cart_items.quantity
+                                           INSERT into potion_ledger (potion_id, job_id, change) 
+                                           SELECT cart_items.potion_id, :cart_id, cart_items.quantity*-1
                                            FROM cart_items
-                                           WHERE potions.potion_id = cart_items.potion_id and cart_items.cart_id = :cart_id
-                                           """), 
-                                           [{"cart_id": cart_id}])
+                                           WHERE cart_items.cart_id = :cart_id
+                                           """), [{"cart_id": cart_id}])
 
         result = connection.execute(sqlalchemy.text("""
             SELECT cart_items.quantity, potions.price
@@ -150,6 +160,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             quantity, price = row
             amount_paid += quantity * price
             total_potions += quantity
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + :payment"), [{"payment": amount_paid}])
+        connection.execute(sqlalchemy.text("INSERT into gold_ledger (job_id, change) VALUES (:cart_id, :change)"),
+                           [{"cart_id": cart_id, "change": amount_paid}])
 
     return {"total_potions_bought": total_potions, "total_gold_paid": amount_paid}
