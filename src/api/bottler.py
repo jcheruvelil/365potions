@@ -28,7 +28,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
         try:
             connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO processed (job_id, type) VALUES (:order_id, 'bottles')"),
+                    "INSERT INTO processed (order_id, type) VALUES (:order_id, 'bottles')"),
                     [{"order_id": order_id}]
                 )
         except exc.IntegrityError as e:

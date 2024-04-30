@@ -135,7 +135,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         try:
             connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO processed (job_id, type) VALUES (:order_id, 'checkout')"),
+                    "INSERT INTO processed (order_id, type) VALUES (:order_id, 'checkout')"),
                     [{"order_id": cart_id}]
                 )
         except exc.IntegrityError as e:
