@@ -21,7 +21,7 @@ def reset():
         connection.execute(sqlalchemy.text("DELETE from processed"))
         connection.execute(sqlalchemy.text("DELETE from cart_items"))
         connection.execute(sqlalchemy.text("DELETE from carts"))
-        connection.execute(sqlalchemy.text("INSERT into processed (job_id, type) VALUES (0, 'reset')"))
+        connection.execute(sqlalchemy.text("INSERT into processed (job_id, order_id, type) VALUES (0, 0, 'reset')"))
         connection.execute(sqlalchemy.text("INSERT into gold_ledger (job_id, change) VALUES (0, 100)"))
         connection.execute(sqlalchemy.text("""
                                            INSERT into ml_ledger (job_id, color, change) VALUES
