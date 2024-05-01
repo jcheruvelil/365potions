@@ -62,11 +62,11 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
             else:
                 print("Invalid Potion Type")
 
-            connection.execute(sqlalchemy.text("INSERT into ml_ledger (color, job_id, change) VALUES (:color, :order_id, :change)"),
+            connection.execute(sqlalchemy.text("INSERT into ml_ledger (color, job_id, type, change) VALUES (:color, :order_id, 'barrels', :change)"),
                                [{"color": color, "order_id": order_id, "change": ml_to_add}])
 
         connection.execute(
-            sqlalchemy.text("INSERT into gold_ledger (job_id, change) VALUES (:order_id, :change)"),
+            sqlalchemy.text("INSERT into gold_ledger (job_id, type, change) VALUES (:order_id, 'barrels', :change)"),
             [{"order_id": order_id, "change": gold_paid*-1}]
         )
 
@@ -104,11 +104,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         green_ml = inventory['green']
         blue_ml = inventory['blue']
         dark_ml = inventory['dark']
-        print("current gold: ", gold)
-        print("red_ml: ", red_ml)
-        print("green_ml: ", green_ml)
-        print("blue_ml: ", blue_ml)
-        print("dark_ml: ", dark_ml)
+
 
     ml_cap = ml_cap*10000
     ind_ml_cap = ml_cap / 4

@@ -142,8 +142,8 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             return "OK"
         
         connection.execute(sqlalchemy.text("""
-                                           INSERT into potion_ledger (potion_id, job_id, change) 
-                                           SELECT cart_items.potion_id, :cart_id, cart_items.quantity*-1
+                                           INSERT into potion_ledger (potion_id, job_id, type, change) 
+                                           SELECT cart_items.potion_id, :cart_id, 'checkout', cart_items.quantity*-1
                                            FROM cart_items
                                            WHERE cart_items.cart_id = :cart_id
                                            """), [{"cart_id": cart_id}])
@@ -160,7 +160,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             quantity, price = row
             amount_paid += quantity * price
             total_potions += quantity
-        connection.execute(sqlalchemy.text("INSERT into gold_ledger (job_id, change) VALUES (:cart_id, :change)"),
+        connection.execute(sqlalchemy.text("INSERT into gold_ledger (job_id, type, change) VALUES (:cart_id, 'checkout', :change)"),
                            [{"cart_id": cart_id, "change": amount_paid}])
 
     return {"total_potions_bought": total_potions, "total_gold_paid": amount_paid}

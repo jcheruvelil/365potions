@@ -40,7 +40,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
             total_ml_used = [x + y for x, y in zip(total_ml_used, ml_used)]
             potion_id = connection.execute(sqlalchemy.text("SELECT potion_id FROM potions WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml"),
                                [{"red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}]).first()[0]
-            connection.execute(sqlalchemy.text("INSERT into potion_ledger (potion_id, job_id, change) VALUES (:potion_id, :job_id, :change)"),
+            connection.execute(sqlalchemy.text("INSERT into potion_ledger (potion_id, job_id, type, change) VALUES (:potion_id, :job_id, 'bottles', :change)"),
                                [{"potion_id": potion_id, "job_id": order_id, "change": potion.quantity}])
 
         ledgers_to_insert = [
@@ -52,8 +52,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
         ledgers_to_insert = [ledger for ledger in ledgers_to_insert if ledger[2] != 0]
         for led in ledgers_to_insert:
             connection.execute(sqlalchemy.text("""
-                                            INSERT into ml_ledger (color, job_id, change) VALUES
-                                            (:color, :job_id, :change)
+                                            INSERT into ml_ledger (color, job_id, type, change) VALUES
+                                            (:color, :job_id, 'bottles', :change)
                                             """),
                                             [{"color": led[0], "job_id": led[1], "change": led[2] }])
             
