@@ -58,18 +58,69 @@ def search_orders(
     time is 5 total line items.
     """
 
+    order_by = None
+    limit = 5
+    offset = (int(search_page)-1)*5
+
+    metadata_obj = sqlalchemy.MetaData()
+    search_view = sqlalchemy.Table("search_view", metadata_obj, autoload_with=db.engine)
+
+    if sort_col is search_sort_options.customer_name:
+        order_by = search_view.c.customer_name
+    elif sort_col is search_sort_options.item_sku:
+        order_by = search_view.c.name
+    elif sort_col is search_sort_options.line_item_total:
+        order_by = search_view.c.quantity
+    elif sort_col is search_sort_options.timestamp:
+        order_by = search_view.c.created_at
+    else:
+        assert False
+
+    if sort_order is search_sort_order.asc:
+        order_by = sqlalchemy.asc(order_by)
+    elif sort_order is search_sort_order.desc:
+        order_by = sqlalchemy.desc(order_by)
+    else:
+        assert False
+
+    stmt = (
+        sqlalchemy.select(search_view)
+    .order_by(order_by, search_view.c.created_at)
+    )
+
+    if customer_name != "":
+        stmt = stmt.where(search_view.c.customer_name.ilike(f"%{customer_name}%"))
+    if potion_sku != "":
+        stmt = stmt.where(search_view.c.name.ilike(f"%{potion_sku}%"))
+
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt).fetchall()
+        total_rows = len(result)
+        json = []
+        line_item_id = 1
+        result_page = result[offset:offset+limit]
+        for row in result_page:
+            json.append(
+                {
+                    "line_item_id": line_item_id,
+                    "item_sku": f"{row.quantity} {row.name}",
+                    "customer_name": row.customer_name,
+                    "line_item_total": total_rows,
+                    "timestamp": row.created_at,
+                }
+            )
+            line_item_id += 1
+
+    prev = ""
+    next = ""
+    if search_page != "" and search_page != "1":
+        prev = str(int(search_page) - 1)
+    if search_page != "" and (int(search_page)*limit < total_rows):
+        next = str(int(search_page) + 1)
     return {
-        "previous": "",
-        "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
-            }
-        ],
+        "previous": prev,
+        "next": next,
+        "results": json,
     }
 
 
