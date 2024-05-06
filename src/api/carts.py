@@ -94,7 +94,7 @@ def search_orders(
     if customer_name != "":
         stmt = stmt.where(search_view.c.customer_name.ilike(f"%{customer_name}%"))
     if potion_sku != "":
-        stmt = stmt.where(search_view.c.name.ilike(f"%{potion_sku}%"))
+        stmt = stmt.where(search_view.c.potion_name.ilike(f"%{potion_sku}%"))
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt).fetchall()
@@ -106,7 +106,7 @@ def search_orders(
             json.append(
                 {
                     "line_item_id": line_item_id,
-                    "item_sku": f"{row.quantity} {row.name}",
+                    "item_sku": f"{row.quantity} {row.potion_name}",
                     "customer_name": row.customer_name,
                     "line_item_total": row.line_item_total,
                     "timestamp": row.created_at,
