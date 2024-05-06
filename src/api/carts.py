@@ -60,6 +60,9 @@ def search_orders(
 
     order_by = None
     limit = 5
+    if(search_page == ""):
+        search_page = "1"
+        
     offset = (int(search_page)-1)*5
 
     metadata_obj = sqlalchemy.MetaData()
