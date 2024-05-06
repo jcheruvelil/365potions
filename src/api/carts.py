@@ -62,7 +62,7 @@ def search_orders(
     limit = 5
     if(search_page == ""):
         search_page = "1"
-        
+
     offset = (int(search_page)-1)*5
 
     metadata_obj = sqlalchemy.MetaData()
@@ -71,9 +71,9 @@ def search_orders(
     if sort_col is search_sort_options.customer_name:
         order_by = search_view.c.customer_name
     elif sort_col is search_sort_options.item_sku:
-        order_by = search_view.c.name
+        order_by = search_view.c.potion_name
     elif sort_col is search_sort_options.line_item_total:
-        order_by = search_view.c.quantity
+        order_by = search_view.c.line_item_total
     elif sort_col is search_sort_options.timestamp:
         order_by = search_view.c.created_at
     else:
@@ -108,7 +108,7 @@ def search_orders(
                     "line_item_id": line_item_id,
                     "item_sku": f"{row.quantity} {row.name}",
                     "customer_name": row.customer_name,
-                    "line_item_total": total_rows,
+                    "line_item_total": row.line_item_total,
                     "timestamp": row.created_at,
                 }
             )
