@@ -107,7 +107,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
 
     ml_cap = ml_cap*10000
-    ind_ml_cap = ml_cap / 4
+    ind_ml_cap = ml_cap / 3
     
 
     sorted_wholesale_catalog = sorted(wholesale_catalog, key=lambda x: x.ml_per_barrel / x.price, reverse=True)
@@ -138,12 +138,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 blue_ml += barrel.quantity
 
         elif barrel.potion_type == [0, 0, 0, 1]:
-            to_fill = (ind_ml_cap-dark_ml)//barrel.ml_per_barrel
-            to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
-            if to_buy > 0:
-                plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
-                gold -= barrel.price*to_buy
-                dark_ml += barrel.quantity
+            continue
+            # to_fill = (ind_ml_cap-dark_ml)//barrel.ml_per_barrel
+            # to_buy = min(barrel.quantity, gold // barrel.price, to_fill)
+            # if to_buy > 0:
+            #     plan.append({"sku": barrel.sku, "quantity": int(to_buy)})
+            #     gold -= barrel.price*to_buy
+            #     dark_ml += barrel.quantity
 
     return plan              
 
